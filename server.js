@@ -3,12 +3,15 @@ const app = express();
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const User = require('./models/user.js');
+const User = require('./models/user');
 
 app.use(bodyParser.json());
 app.use(cors());
 
-mongoose.connect('mongodb+srv://ankit123:ankit123@cluster0.cqtqflo.mongodb.net/your-database-name?retryWrites=true&w=majority')
+mongoose.connect('mongodb+srv://ankit123:ankit123@cluster0.cqtqflo.mongodb.net/your-actual-database-name?retryWrites=true&w=majority', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
   .then(() => {
     console.log("Database connected");
   })
@@ -18,7 +21,7 @@ mongoose.connect('mongodb+srv://ankit123:ankit123@cluster0.cqtqflo.mongodb.net/y
 
 app.get('/', async (req, res) => {
   try {
-    const userdata = await User.find({});
+    const userdata = await User.find();
     res.json({
       data: userdata
     });
@@ -50,6 +53,13 @@ app.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { name, LastName, email, MobileNum, project } = req.body;
   try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
     const updatedUser = await User.findByIdAndUpdate(id, { name, LastName, email, MobileNum, project }, { new: true });
     res.json({
       message: "Data updated",
@@ -66,6 +76,13 @@ app.put('/:id', async (req, res) => {
 app.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
     await User.findByIdAndDelete(id);
     res.json({
       message: "Data deleted"
